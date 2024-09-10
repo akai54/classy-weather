@@ -52,7 +52,6 @@ class App extends React.Component {
         `https://geocoding-api.open-meteo.com/v1/search?name=${this.state.location}`
       );
       const geoData = await geoRes.json();
-      console.log(geoData);
 
       if (!geoData.results) throw new Error("Location not found");
 
@@ -90,8 +89,59 @@ class App extends React.Component {
         <button onClick={this.fetchWeather}>Get weather</button>
 
         {this.state.isLoading && <p className="loader">Loading...</p>}
+
+        {this.state.weather.weathercode && (
+          <Weather
+            weather={this.state.weather}
+            location={this.state.displayLocation}
+          />
+        )}
       </div>
     );
   }
 }
 export default App;
+
+class Weather extends React.Component {
+  render() {
+    const {
+      temperature_2m_max: max,
+      temperature_2m_min: min,
+      weathercode: codes,
+      time: dates,
+    } = this.props.weather;
+
+    return (
+      <div>
+        <h2>Weather {this.props.location}</h2>
+        <ul className="weather">
+          {dates.map((date, i) => (
+            <Day
+              date={date}
+              max={max.at(i)}
+              min={min.at(i)}
+              code={codes.at(i)}
+              key={date}
+              isToday={i === 0}
+            />
+          ))}
+        </ul>
+      </div>
+    );
+  }
+}
+class Day extends React.Component {
+  render() {
+    const { date, max, min, code, isToday } = this.props;
+
+    return (
+      <li className="day">
+        <span>{getWeatherIcon(code)}</span>
+        <p>{isToday ? "Today" : formatDay(date)}</p>
+        <p>
+          {Math.floor(min)}&deg; &mdash; <strong>{Math.ceil(max)}&deg;</strong>
+        </p>
+      </li>
+    );
+  }
+}
